@@ -12,31 +12,45 @@ import java.util.Map;
 public class Main {
 
     public static void main(String args[]) throws IOException {
-        Map<String, String> nameMap = new HashMap<String, String>();
-        List<String> bills = Files.readAllLines(Paths.get("/Users/henneberger/Projects/congress_data/bills_with_sponsor.csv"));
+        Map<String, String> billMap = new HashMap<String, String>();
+        List<String> bills = Files.readAllLines(Paths.get("/Users/henneberger/Projects/congress_data/bill_details.csv"));
         for (int i = 1; i < bills.size(); i++) {
             final String s = bills.get(i);
-            String st[] = s.split(",");
-            nameMap.put(st[0], st[1] + " " + st[2]);
+            int firstIndex = s.indexOf(",");
+            int lastIndex = s.lastIndexOf(",");
+
+            billMap.put(s.substring(0, firstIndex), s.substring(firstIndex +1, lastIndex).replaceAll("\"", ""));
         }
 
         StringBuilder sb = new StringBuilder();
-        List<String> congres = Files.readAllLines(Paths.get("/Users/henneberger/Projects/congress_data/congress_data/sponsor_relationship.output"));
+        List<String> congres = Files.readAllLines(Paths.get("/Users/henneberger/Projects/congress_data/congress_data/bill_relationship.output"));
+        boolean isNew = true;
+        String lastBill = "";
         for (String s : congres) {
+
             String st[] = s.split("\t");
             //st st fl
             if (Double.parseDouble(st[2]) < 0.2)
                 continue;
 
-            sb.append(nameMap.get(st[0]))
-            .append(",")
-            .append(nameMap.get(st[1]))
+            isNew = !lastBill.equals(st[0]);
+            if (isNew) {
+                lastBill = st[0];
+                sb.append(billMap.get(st[0]))
+                .append("\n");
+                continue;
+            }
+
+            sb
+            .append("\t")
+            .append(billMap.get(st[1]))
             .append("\n")
             ;
 
         }
 
-        Files.write(Paths.get("sponsor_relationship_named.output"), sb.toString().getBytes());
+//        System.out.println(sb.toString());
+        Files.write(Paths.get("bill_relationship_named_2.output"), sb.toString().getBytes());
     }
     class Relation {
         String bill;
